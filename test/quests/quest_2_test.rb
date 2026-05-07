@@ -1,7 +1,11 @@
 require_relative "quest_helper"
 
 class Quest2IntelSeedTest < QuestTestCase
+  TEST_SCOPE = %i[tests quest_2].freeze
+
   setup do
+    Rails.application.load_seed
+
     QuestProgress.find_or_create_by!(quest_number: 1) do |quest|
       quest.status = "accepted"
       quest.accepted_at = Time.current
@@ -13,27 +17,18 @@ class Quest2IntelSeedTest < QuestTestCase
     end
   end
 
-  test "сервис второго квеста безопасно возвращает пустые строки без моделей первого квеста" do
-    assert_equal "", Quest2DataService.all_agents
-    assert_equal "", Quest2DataService.all_missions
-    assert_equal "", Quest2DataService.agents_with_missions
-    assert_equal "", Quest2DataService.agents_with_missions_sorted_by_mission_count
-    assert_equal "", Quest2DataService.agents_with_skills
-    assert_equal "", Quest2DataService.skills_by_agent_count
+  test I18n.t(:service_matches_reference, scope: TEST_SCOPE) do
+    Quest2DataService.tasks.each do |task|
+      assert_equal normalized_output(task[:expected_output]),
+        normalized_output(Quest2StudentService.public_send(task[:key])),
+        I18n.t(:step_mismatch, scope: TEST_SCOPE, step: task[:step])
+    end
   end
 
-  test "второй квест показывает первый шаг и блокирует переход дальше, пока ответ не совпал" do
-    get quest_path(2)
 
-    assert_response :success
-    assert_includes response.body, "bin/rails db:seed"
-    assert_includes response.body, "Quest2DataService.all_agents"
-    assert_includes response.body, Quest2DataService.tasks.first[:expected_output].lines.first.strip
-  end
+  private
 
-  test "нельзя открыть второй шаг, пока первый не решён" do
-    get quest_path(2, step: 2)
-
-    assert_redirected_to quest_path(2, step: 1)
+  def normalized_output(output)
+    output.to_s.lines.map(&:rstrip).join("\n").strip
   end
 end

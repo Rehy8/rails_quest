@@ -12,6 +12,10 @@ ru:
   language_switcher:
     label: "Язык"
     select: "Выбери"
+  tests:
+    quest_2:
+      service_matches_reference: "квест 2 сравнивает эталон из Quest2DataService с ответом студенческого сервиса"
+      step_mismatch: "Шаг %{step} должен вернуть строку, совпадающую с эталоном из Quest2DataService"
   quests:
     statuses:
       locked: "ЗАБЛОКИРОВАН"

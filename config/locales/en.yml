@@ -41,6 +41,10 @@ en:
   language_switcher:
     label: "Language"
     select: "Select"
+  tests:
+    quest_2:
+      service_matches_reference: "quest 2 matches Quest2DataService reference output against the student service"
+      step_mismatch: "Step %{step} must return a string that matches the Quest2DataService reference"
   quests:
     statuses:
       locked: "LOCKED"

@@ -3,11 +3,29 @@
 <% total_steps = quest_two_tasks.size %>
 
 <section class="space-y-6">
+  <%- if current_step == 1 %>
   <p>
-    Архив восстановлен, но аналитический слой всё ещё слеп. Твоя задача — наполнить базу тестовыми
+    Структура архива восстановлена, пора загрузить данные и научиться их читать. Твоя задача — наполнить базу тестовыми
     данными и проверить, что система умеет строить сводки по агентам, миссиям и навыкам.
   </p>
 
+  <p>
+    Для начала выполни команду:
+  </p>
+  <div class="rounded-xl border border-amber-700/60 bg-amber-950/20 p-4">
+    <div class="text-xs uppercase tracking-[0.3em] text-amber-400 mb-3">Команда для терминала</div>
+    <pre class="overflow-x-auto whitespace-pre-wrap text-sm text-amber-100">bundle exec rake db:seed</pre>
+  </div>
+    <p>
+    Когда она отработает, начинай выполнять задания. В каждом задании тебе нужно будет написать запрос к базе данных с помощью <code class="bg-gray-800 text-gray-300 px-2 py-1 rounded">ActiveRecord</code> и проверить, что результат совпадает с ожидаемым.
+    Запросы нужно писать в файле <code class="bg-gray-800 text-gray-300 px-2 py-1 rounded">app/services/quest2_student_service.rb</code>, там уже есть заготовки методов для каждого задания.
+    Обрати внимание на тестовую команду, приведенную в каждом задании — она показывает, какой именно метод будет вызван для проверки результата.
+    Ты можешь запускать эту команду в терминале, чтобы увидеть результат своего запроса и сравнить его с ожидаемым.
+    Ну или просто обнови страницу, результат загружается и здесь тоже.
+    Когда результат совпадёт с ожидаемым, ты сможешь перейти к следующему заданию.
+    Обрати внимание, что сервис возвращает строку!
+  </p>
+  <% end %>
   <div class="rounded-xl border border-cyan-900/70 bg-cyan-950/20 p-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
@@ -53,7 +71,8 @@
       <% end %>
     <% else %>
       <span class="px-4 py-2 rounded bg-green-500/20 text-sm font-semibold text-green-300 border border-green-500/40">
-        Финальный шаг разблокирован
+        Можно выполнить <code class="bg-gray-800 text-gray-300 px-1 py-0.5 rounded">rails quest:accept[2]</code> и открыть третье задание.
+        Но мы его еще не выложили, так что...
       </span>
     <% end %>
   </div>

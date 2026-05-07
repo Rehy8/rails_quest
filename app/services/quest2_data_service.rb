@@ -1,4 +1,6 @@
 class Quest2DataService
+  # Don't edit this file, that is hardcoded values to match seeds and to avoid loading models before they are ready for Quest2.
+
   TASKS = [
     {
       step: 1,
@@ -8,10 +10,10 @@ class Quest2DataService
         en: "List all agents"
       },
       description: {
-        ru: "Запусти сиды и выведи список всех агентов из оперативной базы.",
-        en: "Run seeds and print the list of all agents from the operational database."
+        ru: "Выведи список имен всех агентов из базы.",
+        en: "Print the list of all agents from the database."
       },
-      command: 'bin/rails db:seed && bin/rails runner "puts Quest2DataService.all_agents"',
+      command: 'bin/rails runner "puts Quest2StudentService.all_agents"',
       expected_output: <<~TEXT.strip
         Atlas
         Echo
@@ -30,7 +32,7 @@ class Quest2DataService
         ru: "Выведи список всех миссий в алфавитном порядке.",
         en: "Print the full mission list in alphabetical order."
       },
-      command: 'bin/rails runner "puts Quest2DataService.all_missions"',
+      command: 'bin/rails runner "puts Quest2StudentService.all_missions"',
       expected_output: <<~TEXT.strip
         Ember Trace
         Frozen Cipher
@@ -55,7 +57,7 @@ class Quest2DataService
         ru: "Покажи каждому агенту его миссии.",
         en: "Show each agent together with their missions."
       },
-      command: 'bin/rails runner "puts Quest2DataService.agents_with_missions"',
+      command: 'bin/rails runner "puts Quest2StudentService.agents_with_missions"',
       expected_output: <<~TEXT.strip
         Atlas: Harbor Shield, Midnight Relay, Silent Echo
         Echo: Ghost Signal, Iron Veil, Sapphire Run, Solar Tide
@@ -71,10 +73,10 @@ class Quest2DataService
         en: "Agents and missions by mission count"
       },
       description: {
-        ru: "Отсортируй агентов по убыванию числа миссий и выведи их списки.",
-        en: "Sort agents by mission count descending and print their mission lists."
+        ru: "Отсортируй агентов по убыванию числа миссий и выведи их списки. Если у агентов одинаковое число миссий, отсортируй их по имени.",
+        en: "Sort agents by mission count descending and print their mission lists. If agents have the same number of missions, sort them by name."
       },
-      command: 'bin/rails runner "puts Quest2DataService.agents_with_missions_sorted_by_mission_count"',
+      command: 'bin/rails runner "puts Quest2StudentService.agents_with_missions_sorted_by_mission_count"',
       expected_output: <<~TEXT.strip
         Echo (4): Ghost Signal, Iron Veil, Sapphire Run, Solar Tide
         Atlas (3): Harbor Shield, Midnight Relay, Silent Echo
@@ -93,7 +95,7 @@ class Quest2DataService
         ru: "Выведи список агентов и навыки каждого из них.",
         en: "Print agents together with all of their skills."
       },
-      command: 'bin/rails runner "puts Quest2DataService.agents_with_skills"',
+      command: 'bin/rails runner "puts Quest2StudentService.agents_with_skills"',
       expected_output: <<~TEXT.strip
         Atlas: Cryptography, Recon
         Echo: Field Medicine, Infiltration, Recon
@@ -109,10 +111,10 @@ class Quest2DataService
         en: "Skills and agent counts"
       },
       description: {
-        ru: "Сгруппируй навыки по количеству агентов и покажи, кто ими владеет.",
-        en: "Group skills by agent count and show which agents possess them."
+        ru: "Сгруппируй навыки по количеству агентов и выведи списки агентов, упорядоченные по имени.",
+        en: "Group skills by agent count and show which agents possess them, sorted by name."
       },
-      command: 'bin/rails runner "puts Quest2DataService.skills_by_agent_count"',
+      command: 'bin/rails runner "puts Quest2StudentService.skills_by_agent_count"',
       expected_output: <<~TEXT.strip
         Recon (3): Atlas, Echo, Viper
         Cryptography (2): Atlas, Nova
@@ -129,59 +131,11 @@ class Quest2DataService
     end
 
     def output_for(key)
-      public_send(key)
+      safely do
+        Quest2StudentService.public_send(key)
+      end
     rescue StandardError
       ""
-    end
-
-    def all_agents
-      safely do
-        agent_scope.order(:codename).pluck(:codename).join("\n")
-      end
-    end
-
-    def all_missions
-      safely do
-        mission_scope.order(:title).pluck(:title).join("\n")
-      end
-    end
-
-    def agents_with_missions
-      safely do
-        agent_scope.includes(:missions).order(:codename).map do |agent|
-          "#{agent.codename}: #{names_for(agent.missions).join(', ')}"
-        end.join("\n")
-      end
-    end
-
-    def agents_with_missions_sorted_by_mission_count
-      safely do
-        agent_scope.includes(:missions).to_a
-          .sort_by { |agent| [ -agent.missions.size, agent.codename ] }
-          .map do |agent|
-            "#{agent.codename} (#{agent.missions.size}): #{names_for(agent.missions).join(', ')}"
-          end
-          .join("\n")
-      end
-    end
-
-    def agents_with_skills
-      safely do
-        agent_scope.includes(:skills).order(:codename).map do |agent|
-          "#{agent.codename}: #{names_for(agent.skills, attribute: :name).join(', ')}"
-        end.join("\n")
-      end
-    end
-
-    def skills_by_agent_count
-      safely do
-        skill_scope.includes(:agents).to_a
-          .sort_by { |skill| [ -skill.agents.size, skill.name ] }
-          .map do |skill|
-            "#{skill.name} (#{skill.agents.size}): #{names_for(skill.agents).join(', ')}"
-          end
-          .join("\n")
-      end
     end
 
     private
@@ -194,46 +148,17 @@ class Quest2DataService
       ""
     end
 
-    def names_for(records, attribute: :title)
-      records.to_a.sort_by { |record| record.public_send(attribute) }.map { |record| record.public_send(attribute) }
-    end
-
-    def agent_scope
-      agent_class.all
-    end
-
-    def mission_scope
-      raise ActiveRecord::StatementInvalid unless model_ready?(mission_class, :missions)
-
-      mission_class.all
-    end
-
-    def skill_scope
-      raise ActiveRecord::StatementInvalid unless model_ready?(skill_class, :skills)
-
-      skill_class.all
-    end
-
     def agents_ready?
-      model_ready?(agent_class, :agents)
+      model_ready?("Agent".safe_constantize, :agents) &&
+        model_ready?("Mission".safe_constantize, :missions) &&
+        model_ready?("Skill".safe_constantize, :skills) &&
+        model_ready?("AgentSkill".safe_constantize, :agent_skills)
     end
 
     def model_ready?(klass, table_name)
       klass.present? && ActiveRecord::Base.connection.data_source_exists?(table_name)
     rescue StandardError
       false
-    end
-
-    def agent_class
-      @agent_class ||= "Agent".safe_constantize
-    end
-
-    def mission_class
-      @mission_class ||= "Mission".safe_constantize
-    end
-
-    def skill_class
-      @skill_class ||= "Skill".safe_constantize
     end
   end
 end
