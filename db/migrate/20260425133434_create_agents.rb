@@ -7,5 +7,7 @@ class CreateAgents < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
+
+    add_index :agents, :codename, unique: true
   end
 end

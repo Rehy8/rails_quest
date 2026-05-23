@@ -6,5 +6,7 @@ class CreateAgentSkills < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
+
+    add_index :agent_skills, [ :agent_id, :skill_id ], unique: true
   end
 end
