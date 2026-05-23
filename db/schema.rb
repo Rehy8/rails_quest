@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_25_134357) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_25_133803) do
   create_table "agent_skills", force: :cascade do |t|
     t.integer "agent_id", null: false
     t.datetime "created_at", null: false
     t.integer "skill_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["agent_id", "skill_id"], name: "index_agent_skills_on_agent_id_and_skill_id", unique: true
     t.index ["agent_id"], name: "index_agent_skills_on_agent_id"
     t.index ["skill_id"], name: "index_agent_skills_on_skill_id"
   end
@@ -26,6 +27,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_134357) do
     t.datetime "created_at", null: false
     t.integer "level"
     t.datetime "updated_at", null: false
+    t.index ["codename"], name: "index_agents_on_codename", unique: true
   end
 
   create_table "missions", force: :cascade do |t|
@@ -35,6 +37,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_134357) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["agent_id"], name: "index_missions_on_agent_id"
+    t.index ["title"], name: "index_missions_on_title"
   end
 
   create_table "quest_progresses", force: :cascade do |t|
@@ -52,6 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_134357) do
     t.datetime "created_at", null: false
     t.string "name"
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_skills_on_name", unique: true
   end
 
   add_foreign_key "agent_skills", "agents"

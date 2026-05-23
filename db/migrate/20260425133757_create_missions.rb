@@ -1,0 +1,13 @@
+class CreateMissions < ActiveRecord::Migration[8.1]
+  def change
+    create_table :missions do |t|
+      t.string :title
+      t.string :status
+      t.references :agent, null: false, foreign_key: true
+
+      t.timestamps
+    end
+
+    add_index :missions, :title
+  end
+end
